@@ -1,0 +1,60 @@
+#Yml file to provision with Ansible. In the main VM Host, 
+#LXD is installed, a web1 and web2 container is deployed 
+#with apache2, apache2 is enabled and a haproxy container
+#is re and deployed, haproxy is installed, enabled, 
+#and haproxy is restarted
+
+---
+- hosts: balanceo
+  remote_user: remoto
+  become_user: root
+  become: true
+  tasks:
+    - name: actualizar apt upgrade
+      apt: upgrade=yes
+    - neme: instalar net-tools
+      shell: apt-get install net-tools -y
+    - name: instalar LXD
+      shell: sudo snap install lxd --channel=4.0/stable
+    - name: nuevo grupo lxd e iniciar lxd
+      shell: sudo newgrp lxd && sudo lxd init --auto
+    - name: crear contenedor web1
+      shell: lxc launch ubuntu:18.04 web1
+    - name: tiempo de espera contenedor web1
+      shell: sleep 5
+    - name: actualizar contenedor web1
+      shell: lxc exec web1 -- apt update && apt upgrade
+    - name: installar apache2 en el contenedor web1
+      shell: lxc exec web1 -- apt-get install apache2 -y
+    - name: copiar index.html al contenedor web1
+      shell: lxc file push /vagrant/index.html web1/var/www/html/index.html
+    - name: habilitando apache2 en el contenedor web1
+      shell: lxc exec web1 -- systemctl enable apache2
+    - name: reiniciar apache2 en el contenedor web1
+      shell: lxc exec web1 -- systemctl restart apache2
+    - name: crear contenedor web2
+      shell: lxc launch ubuntu:18.04 web2
+    - name: tiempo de espera contenedor web1
+      shell: sleep 5
+    - name: actualizar contenedor web2
+      shell: lxc exec web2 -- apt update && apt upgrade
+    - name: installar apache2 en el contenedor web2
+      shell: lxc exec web2 -- apt-get install apache2 -y
+    - name: copiar index.html al contenedor web2
+      shell: lxc file push /vagrant/index.html web2/var/www/html/index.html
+    - name: habilitando apache2 en el contenedor web2
+      shell: lxc exec web2 -- systemctl enable apache2
+    - name: reiniciar apache2 en el contenedor web2
+      shell: lxc exec web2 -- systemctl restart apache2
+    - name: crear contenedor haproxy
+      shell: lxc launch ubuntu:18.04 haproxy
+    - name: tiempo de espera contenedor haproxy
+      shell: sleep 5
+    - name: actualizar contenedor haproxy
+      shell: lxc exec haproxy -- apt update && apt upgrade
+    - name: installaer haproxy en el contenedor haproxy
+      shell: lxc exec haproxy -- apt install haproxy -y
+    - name: habilitar haproxy en el contenedor haproxy
+      shell: lxc exec haproxy -- systemctl enable haproxy
+    - name: reiniciar el servicio de haproxy en contenedor de haproxy
+      shell: lxc exec haproxy -- systemctl restart haproxy

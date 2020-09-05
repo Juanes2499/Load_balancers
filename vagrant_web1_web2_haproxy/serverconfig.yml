@@ -1,0 +1,60 @@
+#Yml file to provision with Ansible. On the web1 and web2 VM, install 
+#apache2, copy a custom index, enable the apache2 service, restart the 
+#apache2 service, and run a test. On the Haproxy VM install haproxy, 
+#copy the haproxy.cfg file, enable the haproxy service, restart the 
+#haproxy service and perform a test.
+---
+- hosts: web1
+  remote_user: remoto
+  become_user: root
+  become: true
+  tasks:
+    - name: instalar apache2 en VM web1
+      shell: sudo apt-get install apache2 -y
+    - name: copy index.html en VM web1
+      copy:
+        src: web1/index.html
+        dest: /var/www/html/index.html
+        force: yes
+    - name: habilitar apache2 en VM web1
+      shell: sudo systemctl enable apache2
+    - name: reiniciar apache2 en VM web1
+      shell: sudo systemctl restart apache2
+    - name: ejecutar un script de prueba en VM web1
+      shell: curl 127.0.0.1 > /vagrant/rweb1.txt
+- hosts: web2
+  remote_user: remoto
+  become_user: root
+  become: true
+  tasks:
+    - name: instalar apache2 en VM web2
+      shell: sudo apt-get install apache2 -y
+    - name: copy index.html en VM web2
+      copy:
+        src: web2/index.html 
+        dest: /var/www/html/index.html
+        force: yes
+    - name: habilitar apache2 en VM web2
+      shell: sudo systemctl enable apache2
+    - name: reiniciar apache2 en VM web2
+      shell: sudo systemctl restart apache2
+    - name: ejecutar un script de prueba en VM web2
+      shell: curl 127.0.0.1 > /vagrant/rweb2.txt
+- hosts: haproxy
+  remote_user: remoto
+  become_user: root
+  become: true
+  tasks:
+    - name: installar haproxy en VM haproxy
+      shell: sudo apt install haproxy -y
+    - name: copy index.html en VM haproxy
+      copy:
+        src: haproxy.cfg
+        dest: /etc/haproxy/haproxy.cfg
+        force: yes
+    - name: habilitar haproxy en VM haproxy
+      shell: sudo systemctl enable haproxy
+    - name: reiniciar el servicio de haproxy en VM de haproxy
+      shell: sudo systemctl restart haproxy
+    - name: ejecutar un script de prueba en VM haproxy
+      shell: cat /etc/haproxy/haproxy.cfg >> /vagrant/rhaproxy.txt
